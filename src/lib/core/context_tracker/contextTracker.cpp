@@ -126,7 +126,7 @@ bool ContextTracker::contextChange()
 void ContextTracker::update()
 {
     // detect change that needs to be learned
-    std::string change = contextChangeDetector->change(getPastStream());
+    icu::UnicodeString change = contextChangeDetector->change(getPastStream());
 
     if (online_learning)
     {
@@ -137,21 +137,19 @@ void ContextTracker::update()
     contextChangeDetector->update_sliding_window(getPastStream());
 }
 
-void ContextTracker::learn(const std::string& text) const
+void ContextTracker::learn(const icu::UnicodeString& text) const
 {
     logger << INFO << "learn(): text: " << text << endl;
 
-    std::stringstream stream_to_learn(text);
-
     // split stream up into tokens
-    std::vector<std::string> tokens;
-    ForwardTokenizer tok(stream_to_learn,
+    std::vector<icu::UnicodeString> tokens;
+    ForwardTokenizer tok(text,
 			 blankspaceChars,
 			 separatorChars);
     tok.lowercaseMode(lowercase_mode);
     logger << INFO << "learn(): tokenized change: ";
     while (tok.hasMoreTokens()) {
-	std::string token = tok.nextToken();
+        icu::UnicodeString token = tok.nextToken();
 	tokens.push_back(token);
 	logger << INFO << token << '|';
     }
@@ -190,24 +188,25 @@ void ContextTracker::forget(const std::string& word) const
     PredictorRegistry::Iterator it = predictorRegistry->iterator();
     Predictor* predictor = 0;
 
+    icu::UnicodeString forget_word = icu::UnicodeString::fromUTF8(forget);
     while (it.hasNext()) {
 	predictor = it.next();
-	predictor->forget(word);
+	predictor->forget(forget_word);
     }
 }
 
-std::string ContextTracker::getPrefix() const
+icu::UnicodeString ContextTracker::getPrefix() const
 {
     return getToken(0);
 }
 
-std::string ContextTracker::getToken(const int index) const
+icu::UnicodeString ContextTracker::getToken(const int index) const
 {
-    std::stringstream pastStringStream(context_tracker_callback->get_past_stream());
-    ReverseTokenizer tokenizer(pastStringStream, blankspaceChars, separatorChars);
+    const icu::UnicodeString& pastString(context_tracker_callback->get_past_stream());
+    ReverseTokenizer tokenizer(pastString, blankspaceChars, separatorChars);
     tokenizer.lowercaseMode(lowercase_mode);
 
-    std::string token;
+    icu::UnicodeString token;
     int i = 0;
     while (tokenizer.hasMoreTokens() && i <= index) {
         token = tokenizer.nextToken();
@@ -241,7 +240,7 @@ std::string ContextTracker::getToken(const int index) const
 //    return result;
 }
 
-std::string ContextTracker::getExtraTokenToLearn(const int index, const std::vector<std::string>& change) const
+icu::UnicodeString ContextTracker::getExtraTokenToLearn(const int index, const std::vector<icu::UnicodeString>& change) const
 {
     //logger << DEBUG
     //	   << "past_stream   : " << getPastStream() << endl
@@ -270,22 +269,22 @@ std::string ContextTracker::getExtraTokenToLearn(const int index, const std::vec
     return getToken(index + change.size());
 }
 
-std::string ContextTracker::getFutureStream() const
+icu::UnicodeString ContextTracker::getFutureStream() const
 {
     return context_tracker_callback->get_future_stream();
 }
 
-std::string ContextTracker::getPastStream() const
+icu::UnicodeString ContextTracker::getPastStream() const
 {
-    std::string result = context_tracker_callback->get_past_stream();
-    return result;
+  icu::UnicodeString result = context_tracker_callback->get_past_stream();
+  return result;
 }
 
-bool ContextTracker::isCompletionValid(const std::string& completion) const
+bool ContextTracker::isCompletionValid(const icu::UnicodeString& completion) const
 {
     bool result = false;
 
-    std::string prefix = getPrefix();
+    icu::UnicodeString prefix = getPrefix();
     prefix = Utility::strtolower(prefix);  // no need to be case sensitive
     if (completion.find(prefix) == 0) {
         result = true;

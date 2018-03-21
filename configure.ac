@@ -223,6 +223,11 @@ dnl Checks for HUNSPELL
 dnl ==================
 PKG_CHECK_MODULES([HUNSPELL], [hunspell >= 1.5.1])
 
+dnl ==================
+dnl Checks for ICU
+dnl ==================
+PKG_CHECK_MODULES([ICU], [icu-uc])
+
 
 dnl ==================
 dnl Checks for CppUnit

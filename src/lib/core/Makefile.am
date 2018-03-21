@@ -75,7 +75,8 @@ libcore_la_SOURCES =	\
 
 libcore_la_LIBADD =	\
 	tokenizer/libtokenizer.la \
-	context_tracker/libcontexttracker.la
+	context_tracker/libcontexttracker.la \
+	$(ICU_LIBS)
 
 libcore_la_CPPFLAGS =	-I$(top_srcdir)/src/lib
 
